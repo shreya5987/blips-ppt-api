@@ -2,6 +2,10 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from typing import List
 
+from fastapi.responses import FileResponse
+
+
+
 from ppt_generator import generate_ppt
 
 app = FastAPI(
@@ -33,6 +37,8 @@ def home():
         "message": "Use POST /generate-ppt or open /docs to test the API."
     }
 
+
+
 @app.post("/generate-ppt")
 async def generate(request: GeneratePptRequest):
 
@@ -42,7 +48,8 @@ async def generate(request: GeneratePptRequest):
 
     generate_ppt(data, output_path)
 
-    return {
-        "status": "success",
-        "ppt_file": output_path
-    }
+    return FileResponse(
+        output_path,
+        media_type="application/vnd.openxmlformats-officedocument.presentationml.presentation",
+        filename="generated_blips.pptx"
+    )
