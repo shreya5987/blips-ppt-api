@@ -498,9 +498,10 @@ def json_to_powerpoint_notebook(
     return output_path
 
 
-
-DEFAULT_TEMPLATE_PATH = Path(
-    r"C:\Users\siyer4\OneDrive - GlobalFoundries\Documents\AI Agent testing - WET TEMPLATE.pptx"
+DEFAULT_TEMPLATE_PATH = (
+    Path(__file__).parent
+    / "templates"
+    / "AI Agent testing - WET TEMPLATE.pptx"
 )
 
 
