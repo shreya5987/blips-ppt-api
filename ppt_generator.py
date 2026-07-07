@@ -12,24 +12,26 @@ from pptx.dml.color import RGBColor
 
 # Color palette
 # -----------------------------
-
 COLORS = {
     "dark_blue": RGBColor(31, 78, 121),
-    "light_blue": RGBColor(221, 235, 247),
+    "light_blue": RGBColor(231, 245, 255),
     "gray": RGBColor(89, 89, 89),
     "light_gray": RGBColor(242, 242, 242),
     "white": RGBColor(255, 255, 255),
     "black": RGBColor(0, 0, 0),
     "green": RGBColor(112, 173, 71),
-    "yellow": RGBColor(255, 192, 0),
+    "yellow": RGBColor(255, 220, 52),
     "red": RGBColor(192, 0, 0),
+    "purple": RGBColor(67, 0, 122),
+    "light_yellow": RGBColor(255, 245, 209),
+    "orange": RGBColor(255, 96, 18)
 }
+
 
 
 
 # Formatting helpers
 # -----------------------------
-
 
 def set_text_box_text(
     shape,
@@ -64,9 +66,9 @@ def add_footer(slide, footer_text="Generated from JSON analysis"):
     Add small footer.
     """
     shape = slide.shapes.add_textbox(
-        Inches(0.4),
-        Inches(7.15),
-        Inches(12.5),
+        Inches(7.8),
+        Inches(5.35),
+        Inches(1.75),
         Inches(0.25),
     )
 
@@ -74,7 +76,7 @@ def add_footer(slide, footer_text="Generated from JSON analysis"):
         shape,
         footer_text,
         font_size=8,
-        color=COLORS["gray"],
+        color=COLORS["black"],
     )
 
     return shape
@@ -89,7 +91,7 @@ def add_section_box(
     top,
     width,
     height,
-    title_color=COLORS["dark_blue"],
+    title_color=COLORS["purple"],
     body_font_size=13,
 ):
     """
@@ -163,7 +165,7 @@ def add_title(slide, title_text):
     """
     left = Inches(0.4)
     top = Inches(0.25)
-    width = Inches(12.5)
+    width = Inches(9.0)
     height = Inches(0.5)
 
     shape = slide.shapes.add_textbox(left, top, width, height)
@@ -172,9 +174,11 @@ def add_title(slide, title_text):
         title_text,
         font_size=24,
         bold=True,
-        color=COLORS["dark_blue"],
+        color=COLORS["purple"],
     )
     return shape
+
+
 
 
 
@@ -188,7 +192,7 @@ def add_actions_table(slide, actions, left, top, width, height):
         actions = []
 
     rows = max(len(actions), 1) + 1
-    cols = 3
+    cols = 2
 
     table_shape = slide.shapes.add_table(
         rows,
@@ -202,25 +206,24 @@ def add_actions_table(slide, actions, left, top, width, height):
     table = table_shape.table
 
     # Column widths
-    table.columns[0].width = Inches(1.8)         #changed from 2.2 to 1.8
-    table.columns[1].width = Inches(6.0)        #changed from 7.7 to 6.0
-    table.columns[2].width = Inches(1.3)       #changed from 1.6 to 1.3
+    table.columns[0].width = Inches(2.0)         #changed from 2.2 to 1.8
+    table.columns[1].width = Inches(7.0)        #changed from 7.7 to 6.0
 
-    headers = ["Owner", "Action", "Due Date"]
+    headers = ["Owner", "Action"]
 
     # Header row
     for col_idx, header in enumerate(headers):
         cell = table.cell(0, col_idx)
         cell.text = header
         cell.fill.solid()
-        cell.fill.fore_color.rgb = COLORS["dark_blue"]
+        cell.fill.fore_color.rgb = COLORS["purple"]
 
         for paragraph in cell.text_frame.paragraphs:
             paragraph.alignment = PP_ALIGN.CENTER
 
             for run in paragraph.runs:
                 run.font.bold = True
-                run.font.size = Pt(11)
+                run.font.size = Pt(15)
                 run.font.color.rgb = COLORS["white"]
 
     # Body rows
@@ -229,7 +232,7 @@ def add_actions_table(slide, actions, left, top, width, height):
             {
                 "owner": "",
                 "action": "No actions provided",
-                "dueDate": "",
+                
             }
         ]
 
@@ -237,7 +240,7 @@ def add_actions_table(slide, actions, left, top, width, height):
         values = [
             action_item.get("owner", ""),
             action_item.get("action", ""),
-            action_item.get("dueDate", ""),
+    
         ]
 
         for col_idx, value in enumerate(values):
@@ -248,6 +251,11 @@ def add_actions_table(slide, actions, left, top, width, height):
                 cell.fill.solid()
                 cell.fill.fore_color.rgb = COLORS["light_gray"]
 
+            else:
+                cell.fill.solid()
+                cell.fill.fore_color.rgb = COLORS["light_blue"]
+
+
             for paragraph in cell.text_frame.paragraphs:
                 paragraph.alignment = PP_ALIGN.LEFT if col_idx != 2 else PP_ALIGN.CENTER
                 paragraph.space_after = Pt(2)
@@ -257,6 +265,7 @@ def add_actions_table(slide, actions, left, top, width, height):
                     run.font.color.rgb = COLORS["black"]
 
     return table_shape
+
 
 
 # -----------------------------
@@ -290,7 +299,7 @@ def build_title_slide(prs, data):
     subtitle = slide.shapes.add_textbox(
         Inches(0.45),
         Inches(0.95),
-        Inches(12.0),
+        Inches(8.0),
         Inches(0.4),
     )
 
@@ -307,9 +316,9 @@ def build_title_slide(prs, data):
         "Executive Summary",
         data.get("summary"),
         Inches(0.55),
-        Inches(1.6),
+        Inches(1.5),
         Inches(8.5),      #changed from 11.9 to 8.5
-        Inches(2.3),       #changed from 3.5 to 2.5
+        Inches(2.1),       #changed from 3.5 to 2.5
         body_font_size=14,       #changed from 13 to 14
     )
 
@@ -320,15 +329,16 @@ def build_title_slide(prs, data):
         "Primary Failure Interpretation",
         data.get("primaryFailure"),
         Inches(0.55),
-        Inches(4.2),      #changed from 5.15 to 
+        Inches(3.9),      #changed from 5.15 to 
         Inches(8.5),               #changed from 8.5 to 5.5
-        Inches(1.2),
+        Inches(1.4),
         body_font_size=13,
     )
 
     add_footer(slide)
 
     return slide
+
 
 
 def build_recommendation_slide(prs, data):
@@ -346,7 +356,7 @@ def build_recommendation_slide(prs, data):
         Inches(0.55),
         Inches(1.05),
         Inches(8.5),      #changed from 11.9 to 8.5
-        Inches(2.1),         #changed from 4.0 to 2.0
+        Inches(2.0),         #changed from 4.0 to 2.0
         body_font_size=14,       #changed from 13 to 14
     )
 
@@ -369,7 +379,7 @@ def build_recommendation_slide(prs, data):
         "Key Focus Areas",
         focus_areas,
         Inches(0.55),
-        Inches(3.4),       #changed from 5.3 to 3.5
+        Inches(3.3),       #changed from 5.3 to 3.5
         Inches(8.5),      #changed from 11.9 to 8.5
         Inches(2),    #changed from 1.35 to 2
         body_font_size=12,
@@ -380,6 +390,8 @@ def build_recommendation_slide(prs, data):
     add_footer(slide)
 
     return slide
+
+
 
 
 def build_actions_slide(prs, data):
@@ -404,6 +416,7 @@ def build_actions_slide(prs, data):
     add_footer(slide)
 
     return slide
+
 
 
 # -----------------------------
@@ -487,11 +500,11 @@ def json_to_powerpoint_notebook(
 
 
 DEFAULT_TEMPLATE_PATH = Path(
-    r"C:\Users\siyer4\Downloads\AI Agent testing - WET TEMPLATE.pptx"
+    r"C:\Users\siyer4\OneDrive - GlobalFoundries\Documents\AI Agent testing - WET TEMPLATE.pptx"
 )
 
 
-def generate_ppt_from_json(
+def generate_ppt(
     data: dict,
     output_path: str,
     template_path: str | Path = DEFAULT_TEMPLATE_PATH,
