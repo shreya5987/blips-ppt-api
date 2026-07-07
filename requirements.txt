@@ -4,3 +4,6 @@ python-pptx
 requests
 msal
 python-dotenv
+pandas
+openpyxl
+requests
