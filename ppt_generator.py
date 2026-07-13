@@ -11,6 +11,10 @@ from pptx.dml.color import RGBColor
 # Color palette
 # -----------------------------
 
+from asyncio import run
+from weakref import ref
+
+from sympy import shape
 
 
 COLORS = {
@@ -595,29 +599,10 @@ def json_to_powerpoint_notebook(
 
     print(f"PowerPoint deck created: {output_path.resolve()}")
 
-
-def generate_ppt(data, output_path):
-    """
-    Generate PowerPoint directly from a JSON dictionary.
-    """
-
-    prs = Presentation("WET_TEMPLATE.pptx")  # replace with your template filename
-
-    generated_start_index = len(prs.slides)
-
-    build_title_slide(prs, data)
-    build_recommendation_slide(prs, data)
-    build_actions_slide(prs, data)
-    build_bibliography_slide(prs, data)
-
-    move_appended_slides_after(
-        prs,
-        generated_start_index,
-        after_slide_number=3
-    )
-
-    prs.save(output_path)
-
     return output_path
 
-    return output_path
+json_to_powerpoint_notebook(
+    json_path="C:/Users/siyer4/Downloads/sige9hp_npn_cbec.json",
+    template_path="C:/Users/siyer4/Downloads/AI Agent testing - WET TEMPLATE.pptx",
+    output_path="C:/Users/siyer4/Downloads/output.pptx"
+)
