@@ -585,11 +585,21 @@ def json_to_powerpoint_notebook(
             prs.part.drop_rel(r_id)
             del prs.slides._sldIdLst[0]
 
+
+    generated_start_index = len(prs.slides)
+
     # Build slides
     build_title_slide(prs, data)
     build_recommendation_slide(prs, data)
     build_actions_slide(prs, data)
     build_bibliography_slide(prs, data)
+
+        
+    move_appended_slides_after(
+        prs,
+        generated_start_index,
+        after_slide_number=3,
+        )
 
     # Save deck
     prs.save(str(output_path))
@@ -625,7 +635,7 @@ template_path: str | Path = "templates/AI Agent testing - WET TEMPLATE.pptx",
             json_path=temp_json_path,
             template_path=template_path,
             output_path=output_path,
-            keep_existing_template_slides=False,
+            keep_existing_template_slides=True,
         )
 
         return str(generated_path)
