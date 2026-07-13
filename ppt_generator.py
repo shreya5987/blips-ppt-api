@@ -11,10 +11,6 @@ from pptx.dml.color import RGBColor
 # Color palette
 # -----------------------------
 
-from asyncio import run
-from weakref import ref
-
-from sympy import shape
 
 
 COLORS = {
