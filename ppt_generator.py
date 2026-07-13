@@ -601,8 +601,38 @@ def json_to_powerpoint_notebook(
 
     return output_path
 
-json_to_powerpoint_notebook(
-    json_path="C:/Users/siyer4/Downloads/sige9hp_npn_cbec.json",
-    template_path="C:/Users/siyer4/Downloads/AI Agent testing - WET TEMPLATE.pptx",
-    output_path="C:/Users/siyer4/Downloads/output.pptx"
-)
+
+def generate_ppt(
+    data: dict,
+    output_path: str,
+    template_path: str | Path = DEFAULT_TEMPLATE_PATH,
+) -> str:
+    """
+    FastAPI-friendly wrapper.
+
+    Takes JSON data as a Python dictionary, writes it to a temporary JSON file,
+    then calls the existing json_to_powerpoint_notebook function.
+    """
+
+    with tempfile.NamedTemporaryFile(
+        mode="w",
+        suffix=".json",
+        delete=False,
+        encoding="utf-8",
+    ) as temp_json:
+        json.dump(data, temp_json, indent=2)
+        temp_json_path = Path(temp_json.name)
+
+    try:
+        generated_path = json_to_powerpoint_notebook(
+            json_path=temp_json_path,
+            template_path=template_path,
+            output_path=output_path,
+            keep_existing_template_slides=False,
+        )
+
+        return str(generated_path)
+
+    finally:
+        if temp_json_path.exists():
+            temp_json_path.unlink()
