@@ -1,8 +1,6 @@
 import json
 import argparse
-import tempfile
 from pathlib import Path
-
 
 from pptx import Presentation
 from pptx.util import Inches, Pt
@@ -12,6 +10,13 @@ from pptx.dml.color import RGBColor
 
 # Color palette
 # -----------------------------
+
+from asyncio import run
+from weakref import ref
+
+from sympy import shape
+
+
 COLORS = {
     "dark_blue": RGBColor(31, 78, 121),
     "light_blue": RGBColor(231, 245, 255),
@@ -29,15 +34,15 @@ COLORS = {
 
 
 
-
 # Formatting helpers
 # -----------------------------
+
 
 def set_text_box_text(
     shape,
     text,
     font_size=16,
-    bold=False,
+    bold=True,
     color=COLORS["black"],
     align=PP_ALIGN.LEFT,
 ):
@@ -53,6 +58,8 @@ def set_text_box_text(
 
     run = p.add_run()
     run.text = str(text)
+
+
 
     run.font.size = Pt(font_size)
     run.font.bold = bold
@@ -76,6 +83,7 @@ def add_footer(slide, footer_text="Generated from JSON analysis"):
         shape,
         footer_text,
         font_size=8,
+        bold=False,
         color=COLORS["black"],
     )
 
@@ -155,7 +163,7 @@ def add_section_box(
         run.font.size = Pt(body_font_size)
         run.font.color.rgb = COLORS["black"]
 
-    return box
+    return body_shape
 
 
 
@@ -176,9 +184,16 @@ def add_title(slide, title_text):
         bold=True,
         color=COLORS["purple"],
     )
+
+    # Set title font
+
+    for paragraph in shape.text_frame.paragraphs:
+
+        for run in paragraph.runs:
+
+            run.font.name = "Arial Black"
+    
     return shape
-
-
 
 
 
@@ -267,7 +282,6 @@ def add_actions_table(slide, actions, left, top, width, height):
     return table_shape
 
 
-
 # -----------------------------
 # Template/layout helper
 # -----------------------------
@@ -298,7 +312,7 @@ def build_title_slide(prs, data):
 
     subtitle = slide.shapes.add_textbox(
         Inches(0.45),
-        Inches(0.95),
+        Inches(0.85),
         Inches(8.0),
         Inches(0.4),
     )
@@ -316,10 +330,10 @@ def build_title_slide(prs, data):
         "Executive Summary",
         data.get("summary"),
         Inches(0.55),
-        Inches(1.5),
-        Inches(8.5),      #changed from 11.9 to 8.5
-        Inches(2.1),       #changed from 3.5 to 2.5
-        body_font_size=14,       #changed from 13 to 14
+        Inches(1.45),
+        Inches(8.7),      #changed from 11.9 to 8.5
+        Inches(2.3),       #changed from 3.5 to 2.5
+        body_font_size=13,       #changed from 13 to 14
     )
 
     
@@ -329,16 +343,15 @@ def build_title_slide(prs, data):
         "Primary Failure Interpretation",
         data.get("primaryFailure"),
         Inches(0.55),
-        Inches(3.9),      #changed from 5.15 to 
-        Inches(8.5),               #changed from 8.5 to 5.5
-        Inches(1.4),
+        Inches(4.0),  #changed from 5.15 to 
+        Inches(8.7),               #changed from 8.5 to 5.5
+        Inches(1.3),
         body_font_size=13,
     )
 
     add_footer(slide)
 
     return slide
-
 
 
 def build_recommendation_slide(prs, data):
@@ -355,7 +368,7 @@ def build_recommendation_slide(prs, data):
         data.get("recommendation", ""),
         Inches(0.55),
         Inches(1.05),
-        Inches(8.5),      #changed from 11.9 to 8.5
+        Inches(8.7),      #changed from 11.9 to 8.5
         Inches(2.0),         #changed from 4.0 to 2.0
         body_font_size=14,       #changed from 13 to 14
     )
@@ -380,18 +393,13 @@ def build_recommendation_slide(prs, data):
         focus_areas,
         Inches(0.55),
         Inches(3.3),       #changed from 5.3 to 3.5
-        Inches(8.5),      #changed from 11.9 to 8.5
+        Inches(8.7),      #changed from 11.9 to 8.5
         Inches(2),    #changed from 1.35 to 2
         body_font_size=12,
     )
-
-
-
     add_footer(slide)
 
     return slide
-
-
 
 
 def build_actions_slide(prs, data):
@@ -419,6 +427,101 @@ def build_actions_slide(prs, data):
 
 
 
+def build_bibliography_slide(prs, data):
+    """
+    Build bibliography slide.
+    """
+    slide = prs.slides.add_slide(get_blank_layout(prs))
+
+    add_title(slide, "References")
+
+    
+    references_data = data.get("references", [])
+
+    ref_box = slide.shapes.add_textbox(
+        Inches(0.45),
+        Inches(0.6),
+        Inches(9.2),
+        Inches(4.7),
+    )
+
+    # Get text frame
+    text_frame = ref_box.text_frame
+    text_frame.clear()
+    text_frame.word_wrap = True
+
+
+    for i, ref in enumerate(references_data, start=1):
+        p = text_frame.add_paragraph()
+
+        # Number (plain text)
+        run_num = p.add_run()
+        run_num.text = f"{i}. "
+
+        # Hyperlinked title
+        run_link = p.add_run()
+        run_link.text = ref.get("text", "Untitled")
+        run_link.font.size = Pt(13)
+
+        if ref.get("url"):
+            run_link.hyperlink.address = ref["url"]
+
+        desc = ref.get("description", "")
+
+        if desc:
+            p_desc = text_frame.add_paragraph()
+
+            run_desc = p_desc.add_run()
+
+            run_desc.text = desc
+            p_desc.left_margin = Inches(0.3)
+            run_desc.font.size = Pt(13)
+
+        text_frame.add_paragraph()  # Add a blank line after each reference
+
+
+    add_footer(slide)
+
+    return slide
+
+
+
+
+
+
+def move_appended_slides_after(prs, generated_start_index, after_slide_number=3):
+    """
+    Moves all slides added after generated_start_index to appear after a given slide number.
+
+    after_slide_number is 1-based.
+    Example: after_slide_number=3 means insert after slide 3.
+    """
+
+    if len(prs.slides) < after_slide_number:
+        raise ValueError(f"Template must have at least {after_slide_number} slides.")
+
+    sldIdLst = prs.slides._sldIdLst
+
+    # These are the slides that were generated and appended to the end
+    generated_slide_ids = list(sldIdLst)[generated_start_index:]
+
+    # Remove generated slides from the end
+    for sldId in generated_slide_ids:
+        sldIdLst.remove(sldId)
+
+    # Insert after slide 3
+    insert_index = after_slide_number
+
+    for offset, sldId in enumerate(generated_slide_ids):
+        sldIdLst.insert(insert_index + offset, sldId)
+
+
+
+
+
+
+
+
 # -----------------------------
 # Main Jupyter function
 # -----------------------------
@@ -427,7 +530,7 @@ def json_to_powerpoint_notebook(
     json_path,
     template_path,
     output_path="AI Agent testing - WET TEMPLATE.pptx",
-    keep_existing_template_slides=False,
+    keep_existing_template_slides=True,
 ):
     """
     Convert an RCA-style JSON file into a PowerPoint deck using a PPTX template.
@@ -489,6 +592,7 @@ def json_to_powerpoint_notebook(
     build_title_slide(prs, data)
     build_recommendation_slide(prs, data)
     build_actions_slide(prs, data)
+    build_bibliography_slide(prs, data)
 
     # Save deck
     prs.save(str(output_path))
@@ -496,58 +600,3 @@ def json_to_powerpoint_notebook(
     print(f"PowerPoint deck created: {output_path.resolve()}")
 
     return output_path
-
-
-DEFAULT_TEMPLATE_PATH = (
-    Path(__file__).parent
-    / "templates"
-    / "AI Agent testing - WET TEMPLATE.pptx"
-)
-
-
-def generate_ppt(
-    data: dict,
-    output_path: str,
-    template_path: str | Path = DEFAULT_TEMPLATE_PATH,
-) -> str:
-    """
-    FastAPI-friendly wrapper.
-
-    Takes JSON data as a Python dictionary, writes it to a temporary JSON file,
-    then calls the existing json_to_powerpoint_notebook function.
-    """
-
-    with tempfile.NamedTemporaryFile(
-        mode="w",
-        suffix=".json",
-        delete=False,
-        encoding="utf-8",
-    ) as temp_json:
-        json.dump(data, temp_json, indent=2)
-        temp_json_path = Path(temp_json.name)
-
-    try:
-        generated_path = json_to_powerpoint_notebook(
-            json_path=temp_json_path,
-            template_path=template_path,
-            output_path=output_path,
-            keep_existing_template_slides=False,
-        )
-
-        return str(generated_path)
-
-    finally:
-        if temp_json_path.exists():
-            temp_json_path.unlink()
-
-
-if __name__ == "__main__":
-    # Optional standalone test.
-    # This only runs when you directly run:
-    # python ppt_generator.py
-
-    json_to_powerpoint_notebook(
-        json_path=r"C:\Users\siyer4\Downloads\sige9hp_npn_cbec.json",
-        template_path=r"C:\Users\siyer4\Downloads\AI Agent testing - WET TEMPLATE.pptx",
-        output_path=r"C:\Users\siyer4\Downloads\output.pptx",
-    )
