@@ -28,6 +28,14 @@ class GeneratePptRequest(BaseModel):
     recommendation: str
     keyFocusAreas: List[str]
     actions: List[Action]
+    references: list[Reference] = []
+
+
+
+class Reference(BaseModel):
+    text: str
+    url: str | None = None
+    description: str | None = None
 
 
 @app.get("/")
