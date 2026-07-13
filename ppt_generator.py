@@ -1,6 +1,7 @@
 import json
 import argparse
 from pathlib import Path
+import tempfile
 
 from pptx import Presentation
 from pptx.util import Inches, Pt
@@ -11,11 +12,7 @@ from pptx.dml.color import RGBColor
 # Color palette
 # -----------------------------
 
-from asyncio import run
-from weakref import ref
-
-from sympy import shape
-
+DEFAULT_TEMPLATE_PATH = Path("templates/AI Agent testing - WET TEMPLATE.pptx")
 
 COLORS = {
     "dark_blue": RGBColor(31, 78, 121),
@@ -603,9 +600,9 @@ def json_to_powerpoint_notebook(
 
 
 def generate_ppt(
-    data: dict,
-    output_path: str,
-    template_path: str | Path = DEFAULT_TEMPLATE_PATH,
+data: dict,
+output_path: str,
+template_path: str | Path = "templates/AI Agent testing - WET TEMPLATE.pptx",
 ) -> str:
     """
     FastAPI-friendly wrapper.
