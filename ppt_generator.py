@@ -595,11 +595,11 @@ def json_to_powerpoint_notebook(
     build_bibliography_slide(prs, data)
 
         
-    move_appended_slides_after(
-        prs,
-        generated_start_index,
-        after_slide_number=3,
-        )
+    #move_appended_slides_after(
+     #   prs,
+      #  generated_start_index,
+       # after_slide_number=3,
+        #)
 
     # Save deck
     prs.save(str(output_path))
